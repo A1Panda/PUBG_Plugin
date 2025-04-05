@@ -209,57 +209,16 @@ export class MatchApp extends plugin {
    * @returns {string} 格式化后的比赛详情
    */
   async formatMatchDetail(matchData) {
-    const match = matchData.data
-    const attrs = match.attributes
-    
-    // 提取队伍信息
-    const teams = matchData.included.filter(item => item.type === 'roster')
-    const participants = matchData.included.filter(item => item.type === 'participant')
-    
-    // 计算真实玩家数量
-    const playerCount = participants.length
-    
-    let result = `===== 比赛信息 =====\n`
-    result += `比赛ID: ${match.id}\n`
-    result += `时间: ${formatDate(new Date(attrs.createdAt))}\n`
-    result += `地图: ${getMapName(attrs.mapName)}\n`
-    result += `模式: ${getGameMode(attrs.gameMode)}\n`
-    result += `持续时间: ${formatDuration(attrs.duration)}\n`
-    result += `玩家数: ${playerCount}\n`
-    
-    // 胜利队伍信息
-    const winningTeam = teams.find(team => team.attributes.stats.rank === 1)
-    
-    if (winningTeam) {
-      const teamMembers = winningTeam.relationships.participants.data.map(ref => {
-        const player = participants.find(p => p.id === ref.id)
-        return player ? player.attributes.stats.name : 'Unknown Player'
-      })
+    try {
+      // 使用processMatchData处理数据
+      const processedData = this.processMatchData(matchData)
       
-      result += `\n===== 获胜队伍 =====\n`
-      result += `队伍ID: ${winningTeam.id}\n`
-      result += `队伍成员: ${teamMembers.join(', ')}\n`
-      result += `击杀: ${winningTeam.attributes.stats.teamKills}\n`
+      // 使用formatMatchInfo格式化输出
+      return this.formatMatchInfo(processedData)
+    } catch (error) {
+      logger.error(`[PUBG-Plugin] 格式化比赛详情失败: ${error.message}`)
+      return '格式化比赛详情失败，请稍后重试'
     }
-    
-    // 添加击杀排行
-    result += `\n===== 击杀排行 =====\n`
-    
-    // 按击杀数排序
-    const sortedParticipants = [...participants].sort((a, b) => 
-      (b.attributes.stats.kills || 0) - (a.attributes.stats.kills || 0)
-    )
-    
-    // 显示前5名
-    const topKillers = sortedParticipants.slice(0, 5)
-    for (let i = 0; i < topKillers.length; i++) {
-      const player = topKillers[i]
-      const stats = player.attributes.stats
-      
-      result += `${i + 1}. ${stats.name}: ${stats.kills}杀 ${stats.assists}助攻 (排名:${stats.winPlace})\n`
-    }
-    
-    return result
   }
 
   /**
@@ -271,6 +230,10 @@ export class MatchApp extends plugin {
     const matchData = match.data
     const included = match.included || []
     
+    // 处理参与者数据
+    const participants = included.filter(item => item.type === 'participant')
+    const rosters = included.filter(item => item.type === 'roster')
+    
     // 获取比赛基本信息
     const matchInfo = {
       id: matchData.id,
@@ -278,24 +241,23 @@ export class MatchApp extends plugin {
       map: getMapName(matchData.attributes.mapName),
       mode: getGameMode(matchData.attributes.gameMode),
       duration: formatDuration(matchData.attributes.duration),
-      playerCount: matchData.attributes.playerCount || 0
+      playerCount: participants.length // 使用实际参与者数量
     }
-    
-    // 处理参与者数据
-    const participants = included.filter(item => item.type === 'participant')
-    const rosters = included.filter(item => item.type === 'roster')
     
     // 创建玩家ID到数据的映射
     const playerStats = new Map()
     participants.forEach(participant => {
-      playerStats.set(participant.attributes.stats.playerId, {
-        name: participant.attributes.stats.name,
-        kills: participant.attributes.stats.kills,
-        assists: participant.attributes.stats.assists,
-        rank: participant.attributes.stats.winPlace,
-        teamId: participant.relationships.roster.data.id,
-        damageDealt: Math.round(participant.attributes.stats.damageDealt),
-        surviveTime: Math.round(participant.attributes.stats.timeSurvived / 60)
+      const stats = participant.attributes.stats
+      const teamId = participant.relationships?.roster?.data?.id || 'unknown'
+      
+      playerStats.set(stats.playerId, {
+        name: stats.name,
+        kills: stats.kills || 0,
+        assists: stats.assists || 0,
+        rank: stats.winPlace,
+        teamId: teamId,
+        damageDealt: Math.round(stats.damageDealt || 0),
+        surviveTime: Math.round((stats.timeSurvived || 0) / 60)
       })
     })
     
@@ -304,12 +266,12 @@ export class MatchApp extends plugin {
     const winningTeamInfo = winningTeam ? {
       teamId: winningTeam.id,
       members: winningTeam.relationships.participants.data.map(p => {
-        const player = playerStats.get(p.id)
-        return player ? player.name : 'unknown'
+        const participant = participants.find(part => part.id === p.id)
+        return participant ? participant.attributes.stats.name : 'unknown'
       }),
       totalKills: winningTeam.relationships.participants.data.reduce((total, p) => {
-        const player = playerStats.get(p.id)
-        return total + (player ? player.kills : 0)
+        const participant = participants.find(part => part.id === p.id)
+        return total + (participant ? participant.attributes.stats.kills || 0 : 0)
       }, 0)
     } : null
     
