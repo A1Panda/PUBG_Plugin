@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBG 战绩</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+            background-color: #1A1C20;
+            color: #E0E0E0;
+        }
+        .container {
+            width: 700px;
+            padding: 25px;
+            box-sizing: border-box;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #FFA500;
+            padding-bottom: 15px;
+        }
+        .logo {
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+        .header-text {
+            flex-grow: 1;
+        }
+        .player-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #FFA500;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        .platform {
+            font-size: 16px;
+            color: #BBB;
+            margin-top: 5px;
+        }
+        .section {
+            background-color: #272A30;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #FFA500;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #FFA500;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+        }
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .stat-item {
+            background-color: #32363C;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-label {
+            color: #AAA;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFA500;
+        }
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .mode-card {
+            background-color: #32363C;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .mode-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFA500;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #444;
+            text-align: center;
+        }
+        .mode-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .mode-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+        }
+        .mode-stat-label {
+            font-size: 12px;
+            color: #AAA;
+            margin-bottom: 5px;
+        }
+        .mode-stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #E0E0E0;
+        }
+        .highlight {
+            color: #FFA500;
+        }
+        .kd-highlight {
+            color: #FF4757;
+        }
+        .winrate-highlight {
+            color: #2ED573;
+        }
+        .footer {
+            text-align: right;
+            font-size: 12px;
+            color: #777;
+            margin-top: 25px;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <svg width="60" height="60" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 0L150 50L100 100L50 50L100 0Z" fill="#FFA500"/>
+                    <path d="M50 50L100 100L50 150L0 100L50 50Z" fill="#FFA500"/>
+                    <path d="M150 50L200 100L150 150L100 100L150 50Z" fill="#FFA500"/>
+                    <path d="M100 100L150 150L100 200L50 150L100 100Z" fill="#FFA500"/>
+                </svg>
+            </div>
+            <div class="header-text">
+                <div class="player-name">{{playerName}} 的战绩统计</div>
+                <div class="platform">平台: {{platform}}</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">总览数据</div>
+            <div class="overview">
+                <div class="stat-item">
+                    <div class="stat-label">总场次</div>
+                    <div class="stat-value">{{totalMatches}}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">总胜场</div>
+                    <div class="stat-value">{{totalWins}}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">胜率</div>
+                    <div class="stat-value winrate-highlight">{{winRate}}%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">总击杀</div>
+                    <div class="stat-value">{{totalKills}}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">K/D比率</div>
+                    <div class="stat-value kd-highlight">{{totalKD}}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">场均击杀</div>
+                    <div class="stat-value highlight">{{avgKills}}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">游戏模式详情</div>
+            <div class="mode-grid">
+                <div class="mode-card">
+                    <div class="mode-title">单人模式</div>
+                    <div class="mode-stats">
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">场次</div>
+                            <div class="mode-stat-value">{{soloMatches}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">胜场</div>
+                            <div class="mode-stat-value">{{soloWins}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">胜率</div>
+                            <div class="mode-stat-value winrate-highlight">{{soloWinRate}}%</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">K/D</div>
+                            <div class="mode-stat-value kd-highlight">{{soloKD}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">击杀</div>
+                            <div class="mode-stat-value">{{soloKills}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">助攻</div>
+                            <div class="mode-stat-value">{{soloAssists}}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mode-card">
+                    <div class="mode-title">双人模式</div>
+                    <div class="mode-stats">
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">场次</div>
+                            <div class="mode-stat-value">{{duoMatches}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">胜场</div>
+                            <div class="mode-stat-value">{{duoWins}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">胜率</div>
+                            <div class="mode-stat-value winrate-highlight">{{duoWinRate}}%</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">K/D</div>
+                            <div class="mode-stat-value kd-highlight">{{duoKD}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">击杀</div>
+                            <div class="mode-stat-value">{{duoKills}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">助攻</div>
+                            <div class="mode-stat-value">{{duoAssists}}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mode-card">
+                    <div class="mode-title">四人模式</div>
+                    <div class="mode-stats">
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">场次</div>
+                            <div class="mode-stat-value">{{squadMatches}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">胜场</div>
+                            <div class="mode-stat-value">{{squadWins}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">胜率</div>
+                            <div class="mode-stat-value winrate-highlight">{{squadWinRate}}%</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">K/D</div>
+                            <div class="mode-stat-value kd-highlight">{{squadKD}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">击杀</div>
+                            <div class="mode-stat-value">{{squadKills}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">助攻</div>
+                            <div class="mode-stat-value">{{squadAssists}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            更新时间: {{updateTime}} | PUBG Plugin by Yunzai-Bot
+        </div>
+    </div>
+</body>
+</html> 
