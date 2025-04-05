@@ -139,105 +139,80 @@ export class CacheManager {
 }
 
 /**
- * 提取命令中的参数
- * @param {string} message 消息内容
- * @param {string} command 命令前缀
- * @returns {string} 参数
- */
-export function extractParameter(message, command) {
-  if (!message.startsWith(command)) return ''
-  return message.substring(command.length).trim()
-}
-
-/**
- * 格式化时间戳
- * @param {number} timestamp 时间戳
- * @returns {string} 格式化后的时间
- */
-export function formatDate(timestamp) {
-  const date = new Date(timestamp)
-  return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}:${padZero(date.getSeconds())}`
-}
-
-/**
- * 数字补零
- * @param {number} num 数字
- * @returns {string} 补零后的字符串
- */
-function padZero(num) {
-  return num < 10 ? `0${num}` : `${num}`
-}
-
-/**
- * 格式化游戏时长
- * @param {number} seconds 秒数
- * @returns {string} 格式化后的时长
- */
-export function formatDuration(seconds) {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = Math.floor(seconds % 60)
-  return `${minutes}分${remainingSeconds}秒`
-}
-
-/**
- * 获取地图名称中文翻译
+ * 获取地图名称
  * @param {string} mapId 地图ID
- * @returns {string} 地图中文名
+ * @returns {string} 地图中文名称
  */
 export function getMapName(mapId) {
   const mapNames = {
     'Desert_Main': '米拉玛',
+    'DihorOtok_Main': '维寒迪',
     'Erangel_Main': '艾伦格',
-    'Savage_Main': '萨诺',
-    'DihorOtok_Main': '维肯迪',
+    'Baltic_Main': '帕拉莫',
     'Range_Main': '训练场',
-    'Kiki_Main': '帕拉莫',
+    'Savage_Main': '萨诺',
     'Summerland_Main': '凯拉丁',
-    'Tiger_Main': '特罗戈',
-    'Baltic_Main': '塔格',
-    'Chimera_Main': '黑文',
-    'Heaven_Main': '天选之地'
+    'Tiger_Main': '泰戈',
+    'Chimera_Main': '海文',
+    'Kiki_Main': '德卡',
+    'Neon_Main': '霓虹城'
   }
-  
   return mapNames[mapId] || mapId
 }
 
 /**
- * 获取游戏模式中文翻译
- * @param {string} gameMode 游戏模式
- * @returns {string} 游戏模式中文名
+ * 获取游戏模式
+ * @param {string} modeId 模式ID
+ * @returns {string} 模式中文名称
  */
-export function getGameMode(gameMode) {
+export function getGameMode(modeId) {
   const gameModes = {
-    'duo': '双人组队',
-    'duo-fpp': '第一人称双人组队',
     'solo': '单人',
     'solo-fpp': '第一人称单人',
+    'duo': '双人组队',
+    'duo-fpp': '第一人称双人组队',
     'squad': '四人组队',
     'squad-fpp': '第一人称四人组队',
-    'normal-duo': '普通双人组队',
-    'normal-duo-fpp': '普通第一人称双人组队',
-    'normal-solo': '普通单人',
-    'normal-solo-fpp': '普通第一人称单人',
-    'normal-squad': '普通四人组队',
-    'normal-squad-fpp': '普通第一人称四人组队',
-    'conquest-duo': '征服双人组队',
-    'conquest-duo-fpp': '征服第一人称双人组队',
-    'conquest-solo': '征服单人',
-    'conquest-solo-fpp': '征服第一人称单人',
-    'conquest-squad': '征服四人组队',
-    'conquest-squad-fpp': '征服第一人称四人组队',
-    'esports-duo': '电竞双人组队',
-    'esports-duo-fpp': '电竞第一人称双人组队',
-    'esports-solo': '电竞单人',
-    'esports-solo-fpp': '电竞第一人称单人',
-    'esports-squad': '电竞四人组队',
-    'esports-squad-fpp': '电竞第一人称四人组队',
-    'war': '战争模式',
-    'zombie': '僵尸模式',
-    'lab': '实验室',
-    'tdm': '团队死斗'
+    'normal-squad': '四人组队',
+    'normal-squad-fpp': '第一人称四人组队'
   }
-  
-  return gameModes[gameMode] || gameMode
+  return gameModes[modeId] || modeId
+}
+
+/**
+ * 格式化日期时间
+ * @param {Date} date 日期对象
+ * @returns {string} 格式化后的日期时间字符串
+ */
+export function formatDate(date) {
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
+}
+
+/**
+ * 格式化持续时间
+ * @param {number} duration 持续时间（秒）
+ * @returns {string} 格式化后的时间字符串
+ */
+export function formatDuration(duration) {
+  const minutes = Math.floor(duration / 60)
+  const seconds = duration % 60
+  return `${minutes}分${seconds}秒`
+}
+
+/**
+ * 从消息中提取参数
+ * @param {string} content 消息内容
+ * @param {string} command 命令前缀
+ * @returns {string} 提取的参数
+ */
+export function extractParameter(content, command) {
+  return content.replace(command, '').trim()
 } 
