@@ -1,10 +1,10 @@
 # PUBG Plugin for Yunzai-Bot
 
 <div align="center">
-  <img src="./resources/images/pubg-logo.png" alt="PUBG Logo" width="200" style="margin-bottom: 20px">
+  <img src=".\resources\images\pubg_bg.png" alt="PUBG Logo" width="200" style="margin-bottom: 20px">
   <p>一个功能强大的绝地求生(PUBG)游戏数据查询插件</p>
   
-  [![License](https://img.shields.io/github/license/your-username/PUBG_Plugin)](LICENSE)
+  [![License](https://img.shields.io/github/license/A1Panda/PUBG_Plugin)](LICENSE)
   [![Node Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](package.json)
   [![Yunzai Version](https://img.shields.io/badge/Yunzai-%3E%3D3.0.0-blue)](package.json)
 </div>
