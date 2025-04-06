@@ -172,6 +172,68 @@
             padding: 3px 8px;
             border-radius: 4px;
         }
+        .detailed-stats {
+            margin-top: 15px;
+            padding: 15px;
+            background: #3a3a3a;
+            border-radius: 8px;
+        }
+        
+        .stats-section {
+            margin-bottom: 15px;
+        }
+        
+        .stats-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .section-title {
+            color: #4a9eff;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-detail {
+            background: #444;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .detail-label {
+            color: #888;
+        }
+        
+        .detail-value {
+            color: #fff;
+        }
+        
+        .teammate-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .teammate-stats-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .teammate-stat {
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -256,6 +318,51 @@
                         <div class="stat-label">排名</div>
                     </div>
                 </div>
+
+                <div class="detailed-stats">
+                    <div class="stats-section">
+                        <div class="section-title">战斗数据</div>
+                        <div class="stats-grid">
+                            <div class="stat-detail">
+                                <span class="detail-label">爆头击杀:</span>
+                                <span class="detail-value">{{stats.headshotKills}}</span>
+                            </div>
+                            <div class="stat-detail">
+                                <span class="detail-label">击倒数:</span>
+                                <span class="detail-value">{{stats.dbnos}}</span>
+                            </div>
+                            <div class="stat-detail">
+                                <span class="detail-label">最远击杀:</span>
+                                <span class="detail-value">{{stats.longestKill}}米</span>
+                            </div>
+                            <div class="stat-detail">
+                                <span class="detail-label">击杀排名:</span>
+                                <span class="detail-value">{{stats.killPlace}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-section">
+                        <div class="section-title">生存数据</div>
+                        <div class="stats-grid">
+                            <div class="stat-detail">
+                                <span class="detail-label">治疗次数:</span>
+                                <span class="detail-value">{{stats.heals}}</span>
+                            </div>
+                            <div class="stat-detail">
+                                <span class="detail-label">加速次数:</span>
+                                <span class="detail-value">{{stats.boosts}}</span>
+                            </div>
+                            <div class="stat-detail">
+                                <span class="detail-label">步行距离:</span>
+                                <span class="detail-value">{{stats.movement.walk}}米</span>
+                            </div>
+                            <div class="stat-detail">
+                                <span class="detail-label">载具距离:</span>
+                                <span class="detail-value">{{stats.movement.ride}}米</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {{/if}}
 
                 {{#if teammates}}
@@ -266,10 +373,23 @@
                         <div class="teammate-item">
                             <div class="teammate-name">{{name}}</div>
                             <div class="teammate-stats">
-                                <span class="teammate-stat">击杀: {{kills}}</span>
-                                <span class="teammate-stat">助攻: {{assists}}</span>
-                                <span class="teammate-stat">伤害: {{damageDealt}}</span>
-                                <span class="teammate-stat">存活: {{survival}}</span>
+                                <div class="teammate-stats-row">
+                                    <span class="teammate-stat">击杀: {{kills}}</span>
+                                    <span class="teammate-stat">助攻: {{assists}}</span>
+                                    <span class="teammate-stat">伤害: {{damageDealt}}</span>
+                                    <span class="teammate-stat">存活: {{survival}}</span>
+                                </div>
+                                <div class="teammate-stats-row">
+                                    <span class="teammate-stat">爆头: {{headshotKills}}</span>
+                                    <span class="teammate-stat">击倒: {{dbnos}}</span>
+                                    <span class="teammate-stat">治疗: {{heals}}</span>
+                                    <span class="teammate-stat">加速: {{boosts}}</span>
+                                </div>
+                                <div class="teammate-stats-row">
+                                    <span class="teammate-stat">步行: {{movement.walk}}米</span>
+                                    <span class="teammate-stat">载具: {{movement.ride}}米</span>
+                                    <span class="teammate-stat">最远击杀: {{longestKill}}米</span>
+                                </div>
                             </div>
                         </div>
                         {{/each}}

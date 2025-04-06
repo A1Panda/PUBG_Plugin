@@ -424,7 +424,19 @@ export class PlayerApp extends plugin {
                         kills: p.attributes.stats.kills,
                         assists: p.attributes.stats.assists,
                         damageDealt: Math.round(p.attributes.stats.damageDealt || 0),
-                        survival: formatDuration(p.attributes.stats.timeSurvived)
+                        survival: formatDuration(p.attributes.stats.timeSurvived),
+                        // 添加更多队友数据
+                        dbnos: p.attributes.stats.DBNOs || 0,
+                        headshotKills: p.attributes.stats.headshotKills || 0,
+                        heals: p.attributes.stats.heals || 0,
+                        boosts: p.attributes.stats.boosts || 0,
+                        killPlace: p.attributes.stats.killPlace,
+                        longestKill: Math.round(p.attributes.stats.longestKill || 0),
+                        movement: {
+                          ride: Math.round(p.attributes.stats.rideDistance || 0),
+                          walk: Math.round(p.attributes.stats.walkDistance || 0),
+                          swim: Math.round(p.attributes.stats.swimDistance || 0)
+                        }
                       }
                       logger.mark(`[PUBG-Plugin] 队友数据: ${JSON.stringify(teammateData)}`)
                       return teammateData
@@ -449,10 +461,23 @@ export class PlayerApp extends plugin {
               duration: formatDuration(stats.timeSurvived),
               totalPlayers: playerCount,
               rank: stats.winPlace,
+              isCustomMatch: attrs.isCustomMatch || false,
               stats: {
                 kills: stats.kills,
                 assists: stats.assists,
-                damageDealt: Math.round(stats.damageDealt || 0)
+                damageDealt: Math.round(stats.damageDealt || 0),
+                // 添加更多玩家数据
+                dbnos: stats.DBNOs || 0,
+                headshotKills: stats.headshotKills || 0,
+                heals: stats.heals || 0,
+                boosts: stats.boosts || 0,
+                killPlace: stats.killPlace,
+                longestKill: Math.round(stats.longestKill || 0),
+                movement: {
+                  ride: Math.round(stats.rideDistance || 0),
+                  walk: Math.round(stats.walkDistance || 0),
+                  swim: Math.round(stats.swimDistance || 0)
+                }
               },
               teammates: teammates
             }

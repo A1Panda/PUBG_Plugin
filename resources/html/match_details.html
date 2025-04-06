@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBG比赛详情</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3a3a3a;
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #4a9eff;
+        }
+        
+        .match-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .info-label {
+            color: #888;
+        }
+        
+        .info-value {
+            color: #fff;
+        }
+        
+        .stats-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+        }
+        
+        .section-title {
+            color: #4a9eff;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-item {
+            background: #3a3a3a;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .weapon-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .weapon-item {
+            background: #3a3a3a;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .weapon-name {
+            color: #4a9eff;
+            margin-bottom: 5px;
+        }
+        
+        .weapon-kills {
+            color: #ff4a4a;
+        }
+        
+        .timeline {
+            margin-top: 20px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #3a3a3a;
+            border-radius: 6px;
+        }
+        
+        .timeline-time {
+            color: #888;
+            margin-right: 15px;
+            min-width: 100px;
+        }
+        
+        .timeline-event {
+            flex-grow: 1;
+        }
+        
+        .timeline-type {
+            color: #4a9eff;
+            margin-right: 10px;
+        }
+        
+        .timeline-details {
+            color: #fff;
+        }
+        
+        .kill-streaks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .streak-item {
+            background: #4a4a4a;
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: #ff4a4a;
+        }
+        
+        .movement-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .movement-item {
+            background: #4a4a4a;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .movement-label {
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .movement-value {
+            color: #4a9eff;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>比赛详细数据</h1>
+            <div>{{playerName}} - {{platform}}</div>
+        </div>
+
+        <div class="match-info">
+            <div class="info-item">
+                <span class="info-label">地图:</span>
+                <span class="info-value">{{matchInfo.mapName}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">模式:</span>
+                <span class="info-value">{{matchInfo.gameMode}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">时间:</span>
+                <span class="info-value">{{matchInfo.createdAt}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">持续时间:</span>
+                <span class="info-value">{{matchInfo.duration}}</span>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="section-title">战斗数据</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="info-label">造成伤害</div>
+                    <div class="info-value">{{playerStats.damageDealt}}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="info-label">承受伤害</div>
+                    <div class="info-value">{{playerStats.damageTaken}}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="info-label">爆头击杀</div>
+                    <div class="info-value">{{playerStats.headshotKills}}</div>
+                </div>
+            </div>
+
+            {{#if playerStats.killStreaks.length}}
+            <div class="kill-streaks">
+                <div class="info-label">连杀:</div>
+                {{#each playerStats.killStreaks}}
+                <div class="streak-item">{{this}}连杀</div>
+                {{/each}}
+            </div>
+            {{/if}}
+        </div>
+
+        <div class="stats-section">
+            <div class="section-title">武器使用统计</div>
+            <div class="weapon-stats">
+                {{#each playerStats.weaponStats}}
+                <div class="weapon-item">
+                    <div class="weapon-name">{{@key}}</div>
+                    <div class="weapon-kills">{{this}}击杀</div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="section-title">移动数据</div>
+            <div class="movement-stats">
+                <div class="movement-item">
+                    <div class="movement-label">总距离</div>
+                    <div class="movement-value">{{playerStats.movement.total}}米</div>
+                </div>
+                <div class="movement-item">
+                    <div class="movement-label">载具距离</div>
+                    <div class="movement-value">{{playerStats.movement.vehicle}}米</div>
+                </div>
+                <div class="movement-item">
+                    <div class="movement-label">步行距离</div>
+                    <div class="movement-value">{{playerStats.movement.walking}}米</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="section-title">比赛时间线</div>
+            <div class="timeline">
+                {{#each playerStats.timeline}}
+                <div class="timeline-item">
+                    <div class="timeline-time">{{formatTime time}}</div>
+                    <div class="timeline-event">
+                        <span class="timeline-type">{{type}}</span>
+                        <span class="timeline-details">{{formatEvent details}}</span>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
