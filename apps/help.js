@@ -4,39 +4,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PubgApiService } from '../utils/pubg-api.js'
+import puppeteer from 'puppeteer'
 
 // 获取当前文件的目录
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-// 帮助内容
-const HELP_CONTENT = `绝地求生数据查询插件
-
-基础命令:
-${config.cmdPrefix}帮助 - 显示此帮助信息
-${config.cmdPrefix}关于 - 显示插件信息
-
-玩家相关:
-${config.cmdPrefix}查询 <游戏ID> - 查询玩家基本信息
-${config.cmdPrefix}查询 <游戏ID> <平台> - 查询指定平台玩家信息
-${config.cmdPrefix}最近比赛 <游戏ID> - 查询玩家最近比赛
-${config.cmdPrefix}战绩图 <游戏ID> - 生成格式化战绩数据
-
-比赛相关:
-${config.cmdPrefix}比赛 <比赛ID> - 查询特定比赛信息
-${config.cmdPrefix}最近50 - 查看最近50场比赛
-${config.cmdPrefix}最近10 - 查看最近10场比赛
-
-账号绑定:
-${config.cmdPrefix}绑定 <游戏ID> - 绑定PUBG账号
-${config.cmdPrefix}解绑 - 解绑PUBG账号
-${config.cmdPrefix}我的信息 - 查看绑定账号信息
-
-高级功能:
-${config.cmdPrefix}设置区域 <区域> - 设置默认区域
-${config.cmdPrefix}设置平台 <平台> - 设置默认平台
-
-*注: 平台可选值: steam, kakao, psn, xbox, stadia
-区域可选值: as(亚洲), eu(欧洲), jp(日本), kakao(韩国), krjp(韩国/日本), na(北美), oc(大洋洲), ru(俄罗斯), sa(南美), sea(东南亚), tournament(比赛)`
 
 // 关于信息
 const ABOUT_CONTENT = `绝地求生数据查询插件 v1.0.0
@@ -82,8 +53,67 @@ export class HelpApp extends plugin {
    * @param {object} e 消息事件对象
    */
   async help(e) {
-    // 回复帮助信息
-    await this.reply(HELP_CONTENT)
+    try {
+      // 读取HTML模板
+      const templatePath = path.join(__dirname, '../resources/html/help.html')
+      let template = fs.readFileSync(templatePath, 'utf8')
+      
+      // 替换命令前缀
+      template = template.replace(/{{cmdPrefix}}/g, config.cmdPrefix)
+      
+      // 使用puppeteer生成图片
+      const browser = await puppeteer.launch({
+        headless: "new",
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      })
+      const page = await browser.newPage()
+      await page.setViewport({ width: 800, height: 800 })
+      await page.setContent(template)
+      
+      // 等待内容加载完成
+      await page.waitForSelector('.container')
+      
+      // 获取实际内容高度
+      const containerHeight = await page.evaluate(() => {
+        const container = document.querySelector('.container')
+        return container.getBoundingClientRect().height
+      })
+      
+      // 调整视口高度
+      await page.setViewport({ width: 800, height: Math.ceil(containerHeight) + 40 })
+      
+      // 确保临时目录存在
+      const tempDir = path.join(process.cwd(), 'temp')
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir)
+      }
+      
+      // 生成图片
+      const imagePath = path.join(tempDir, `help_${Date.now()}.png`)
+      await page.screenshot({
+        path: imagePath,
+        fullPage: true
+      })
+      
+      await browser.close()
+      
+      // 发送图片
+      await e.reply(segment.image(imagePath))
+      
+      // 延迟删除临时文件
+      setTimeout(() => {
+        try {
+          fs.unlinkSync(imagePath)
+        } catch (error) {
+          logger.error(`[PUBG-Plugin] 删除临时图片失败: ${error.message}`)
+        }
+      }, 5000)
+      
+    } catch (error) {
+      logger.error(`[PUBG-Plugin] 生成帮助图片失败: ${error.message}`)
+      await e.reply(`生成帮助图片失败: ${error.message}`)
+    }
+    
     return true
   }
 
@@ -150,4 +180,4 @@ export class HelpApp extends plugin {
     
     return true
   }
-} 
+}

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3a3a3a;
+        }
+        .header h1 {
+            color: #ff6b6b;
+            margin: 0;
+            font-size: 24px;
+        }
+        .section {
+            margin-bottom: 20px;
+            background: #333333;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .section-title {
+            color: #4dabf7;
+            font-size: 18px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #4a4a4a;
+        }
+        .command {
+            margin: 8px 0;
+            padding: 8px;
+            background: #3a3a3a;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .command-name {
+            color: #ffd43b;
+        }
+        .command-desc {
+            color: #adb5bd;
+        }
+        .note {
+            margin-top: 20px;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            border-left: 4px solid #4dabf7;
+        }
+        .note-title {
+            color: #4dabf7;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .note-content {
+            color: #adb5bd;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>绝地求生数据查询插件</h1>
+        </div>
+
+        <div class="section">
+            <div class="section-title">基础命令</div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}帮助</span>
+                <span class="command-desc">显示此帮助信息</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}关于</span>
+                <span class="command-desc">显示插件信息</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}测试</span>
+                <span class="command-desc">测试API连接状态</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">玩家相关</div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}查询 &lt;游戏ID&gt;</span>
+                <span class="command-desc">查询玩家基本信息</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}查询 &lt;游戏ID&gt; &lt;平台&gt;</span>
+                <span class="command-desc">查询指定平台玩家信息</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}最近比赛 &lt;游戏ID&gt;</span>
+                <span class="command-desc">查询玩家最近比赛</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}战绩图 &lt;游戏ID&gt;</span>
+                <span class="command-desc">生成格式化战绩数据</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}武器统计 &lt;游戏ID&gt;</span>
+                <span class="command-desc">查看武器使用统计</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">比赛相关</div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}查询比赛 &lt;比赛ID&gt;</span>
+                <span class="command-desc">查询特定比赛信息</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}最近50</span>
+                <span class="command-desc">查看最近50场比赛</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}最近10</span>
+                <span class="command-desc">查看最近10场比赛</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}详细数据 &lt;比赛ID&gt;</span>
+                <span class="command-desc">查看详细比赛数据</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">账号绑定</div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}绑定 &lt;游戏ID&gt;</span>
+                <span class="command-desc">绑定PUBG账号</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}解绑</span>
+                <span class="command-desc">解绑PUBG账号</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}我的信息</span>
+                <span class="command-desc">查看绑定账号信息</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">高级功能</div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}设置区域 &lt;区域&gt;</span>
+                <span class="command-desc">设置默认区域</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}设置平台 &lt;平台&gt;</span>
+                <span class="command-desc">设置默认平台</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}更新</span>
+                <span class="command-desc">更新插件</span>
+            </div>
+            <div class="command">
+                <span class="command-name">{{cmdPrefix}}更新日志</span>
+                <span class="command-desc">查看更新记录</span>
+            </div>
+        </div>
+
+        <div class="note">
+            <div class="note-title">注意事项</div>
+            <div class="note-content">
+                <p>平台可选值: steam, kakao, psn, xbox, stadia</p>
+                <p>区域可选值: as(亚洲), eu(欧洲), jp(日本), kakao(韩国), krjp(韩国/日本), na(北美), oc(大洋洲), ru(俄罗斯), sa(南美), sea(东南亚), tournament(比赛)</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
