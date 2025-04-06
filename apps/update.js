@@ -1,6 +1,6 @@
 import { update as Update } from '../../other/update.js'
 
-const PluginName = 'PUBG-Plugin'
+const PluginName = 'PUBG_Plugin'
 
 export class update extends plugin {
   constructor () {
