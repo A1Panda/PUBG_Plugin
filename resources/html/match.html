@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUBG比赛信息</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3a3a3a;
+        }
+        .header h1 {
+            margin: 0;
+            color: #4a9eff;
+        }
+        .match-info {
+            margin-bottom: 15px;
+        }
+        .match-item {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .match-title {
+            font-size: 1.2em;
+            color: #4a9eff;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #444;
+        }
+        .match-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .detail-label {
+            color: #888;
+        }
+        .detail-value {
+            color: #fff;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+        }
+        .stat-item {
+            text-align: center;
+            background: #383838;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            color: #4a9eff;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+        .winning-team {
+            margin-top: 15px;
+            padding: 15px;
+            background: #3a3a3a;
+            border-radius: 8px;
+        }
+        .winning-team-title {
+            color: #ffd700;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .team-members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .team-member {
+            background: #444;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .kill-ranking {
+            margin-top: 15px;
+            padding: 15px;
+            background: #3a3a3a;
+            border-radius: 8px;
+        }
+        .kill-ranking-title {
+            color: #ff4a4a;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .kill-ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #444;
+        }
+        .kill-ranking-item:last-child {
+            border-bottom: none;
+        }
+        .player-name {
+            color: #fff;
+        }
+        .player-stats {
+            color: #888;
+            font-size: 0.9em;
+        }
+        .teammates {
+            margin-top: 15px;
+            padding: 15px;
+            background: #3a3a3a;
+            border-radius: 8px;
+        }
+        .teammates-title {
+            color: #4a9eff;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .teammates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .teammate-item {
+            background: #444;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .teammate-name {
+            color: #fff;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        .teammate-stats {
+            display: flex;
+            gap: 15px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        .teammate-stat {
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PUBG比赛信息</h1>
+        </div>
+        <div class="match-info">
+            {{#each matches}}
+            <div class="match-item">
+                <div class="match-title">{{#if @first}}比赛详情{{else}}比赛 {{add @index 1}}{{/if}}</div>
+                <div class="match-details">
+                    <div class="detail-item">
+                        <span class="detail-label">比赛ID:</span>
+                        <span class="detail-value">{{id}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">时间:</span>
+                        <span class="detail-value">{{time}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">地图:</span>
+                        <span class="detail-value">{{map}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">模式:</span>
+                        <span class="detail-value">{{mode}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">持续时间:</span>
+                        <span class="detail-value">{{duration}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">玩家数:</span>
+                        <span class="detail-value">{{totalPlayers}}</span>
+                    </div>
+                </div>
+
+                {{#if winningTeam}}
+                <div class="winning-team">
+                    <div class="winning-team-title">获胜队伍</div>
+                    <div class="team-members">
+                        {{#each winningTeam.members}}
+                        <div class="team-member">{{this}}</div>
+                        {{/each}}
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">总击杀:</span>
+                        <span class="detail-value">{{winningTeam.totalKills}}</span>
+                    </div>
+                </div>
+                {{/if}}
+
+                {{#if killRanking}}
+                <div class="kill-ranking">
+                    <div class="kill-ranking-title">击杀排行</div>
+                    {{#each killRanking}}
+                    <div class="kill-ranking-item">
+                        <span class="player-name">{{add @index 1}}. {{name}}</span>
+                        <span class="player-stats">{{kills}}杀 {{assists}}助攻 (排名:{{rank}}, 伤害:{{damageDealt}})</span>
+                    </div>
+                    {{/each}}
+                </div>
+                {{/if}}
+
+                {{#if stats}}
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{stats.kills}}</div>
+                        <div class="stat-label">击杀</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{stats.assists}}</div>
+                        <div class="stat-label">助攻</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{stats.damageDealt}}</div>
+                        <div class="stat-label">伤害</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{rank}}/{{totalPlayers}}</div>
+                        <div class="stat-label">排名</div>
+                    </div>
+                </div>
+                {{/if}}
+
+                {{#if teammates}}
+                <div class="teammates">
+                    <div class="teammates-title">队友信息</div>
+                    <div class="teammates-list">
+                        {{#each teammates}}
+                        <div class="teammate-item">
+                            <div class="teammate-name">{{name}}</div>
+                            <div class="teammate-stats">
+                                <span class="teammate-stat">击杀: {{kills}}</span>
+                                <span class="teammate-stat">助攻: {{assists}}</span>
+                                <span class="teammate-stat">伤害: {{damageDealt}}</span>
+                                <span class="teammate-stat">存活: {{survival}}</span>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+                {{/if}}
+            </div>
+            {{/each}}
+        </div>
+    </div>
+</body>
+</html> 

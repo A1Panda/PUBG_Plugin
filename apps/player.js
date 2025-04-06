@@ -1,10 +1,16 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import config from '../config/config.js'
 import { PubgApiService } from '../utils/pubg-api.js'
+import { RenderService } from '../utils/render.js'
 import { UserDataManager, extractParameter, formatDate, formatDuration, getGameMode, getMapName } from '../utils/common.js'
 import { imageGenerator } from '../index.js'
 import fetch from 'node-fetch'
 import { segment } from 'oicq'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
  * 玩家查询功能模块
@@ -46,6 +52,7 @@ export class PlayerApp extends plugin {
 
     this.apiService = new PubgApiService()
     this.userDataManager = new UserDataManager()
+    this.renderService = new RenderService()
 
     // 用户冷却时间映射
     this.cooldowns = new Map()
@@ -228,6 +235,60 @@ export class PlayerApp extends plugin {
   }
 
   /**
+   * 生成并保存图片
+   * @param {object} data 渲染数据
+   * @returns {string} 图片路径
+   */
+  async generateImage(data) {
+    try {
+      // 确保temp目录存在
+      const tempDir = path.join(__dirname, '../temp')
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true })
+      }
+
+      // 生成图片
+      const imageBuffer = await this.renderService.renderImage('match', data)
+      
+      // 保存图片
+      const imagePath = path.join(tempDir, `match_${Date.now()}.png`)
+      await fs.promises.writeFile(imagePath, imageBuffer)
+      
+      return imagePath
+    } catch (error) {
+      logger.error(`[PUBG-Plugin] 生成图片失败: ${error.message}`)
+      throw error
+    }
+  }
+
+  /**
+   * 发送图片消息
+   * @param {object} e 消息事件对象
+   * @param {string} imagePath 图片路径
+   */
+  async sendImage(e, imagePath) {
+    try {
+      // 使用 segment.image 方法构建图片消息
+      let msg = segment.image(imagePath)
+      
+      // 发送消息
+      await e.reply(msg)
+      
+      // 延迟删除临时文件
+      setTimeout(() => {
+        try {
+          fs.unlinkSync(imagePath)
+        } catch (error) {
+          logger.error(`[PUBG-Plugin] 删除临时图片失败: ${error.message}`)
+        }
+      }, 5000)
+    } catch (error) {
+      logger.error(`[PUBG-Plugin] 发送图片失败: ${error.message}`)
+      await e.reply(`发送图片失败: ${error.message}`)
+    }
+  }
+
+  /**
    * 最近比赛命令处理
    * @param {object} e 消息事件对象
    */
@@ -292,19 +353,133 @@ export class PlayerApp extends plugin {
       }
       
       // 获取详细的比赛数据
-      const matchDetails = []
+      const matchesData = []
       const limit = Math.min(matches.length, config.matchesPerPage)
       
       for (let i = 0; i < limit; i++) {
-        const matchData = await this.apiService.getMatch(matches[i].id, platform)
-        matchDetails.push(matchData)
+        try {
+          const matchData = await this.apiService.getMatch(matches[i].id, platform)
+          const attrs = matchData.data.attributes
+          
+          // 查找玩家在该比赛中的表现
+          const participant = matchData.included.find(item => 
+            item.type === 'participant' && 
+            item.attributes.stats.name.toLowerCase() === playerName.toLowerCase()
+          )
+          
+          // 计算真实玩家数量
+          const participants = matchData.included.filter(item => item.type === 'participant')
+          const playerCount = participants.length
+          
+          if (participant) {
+            const stats = participant.attributes.stats
+
+            // 获取队友信息
+            let teammates = []
+            if (attrs.gameMode.includes('squad') || attrs.gameMode.includes('duo')) {
+              try {
+                // 首先找到玩家所在的 roster
+                const roster = matchData.included.find(item => 
+                  item.type === 'roster' && 
+                  item.relationships.participants.data.some(p => 
+                    matchData.included.find(inc => 
+                      inc.type === 'participant' && 
+                      inc.id === p.id && 
+                      inc.attributes.stats.name.toLowerCase() === playerName.toLowerCase()
+                    )
+                  )
+                )
+
+                if (roster) {
+                  logger.mark(`[PUBG-Plugin] 找到玩家所在队伍`)
+                  const playerTeamId = roster.attributes.stats.teamId
+                  logger.mark(`[PUBG-Plugin] 玩家队伍ID: ${playerTeamId}`)
+
+                  // 从 roster 中获取所有队友
+                  const rosterParticipants = roster.relationships.participants.data.map(p => p.id)
+                  logger.mark(`[PUBG-Plugin] 队伍成员ID: ${JSON.stringify(rosterParticipants)}`)
+
+                  // 获取所有队友的详细信息
+                  const allTeammates = matchData.included
+                    .filter(item => 
+                      item.type === 'participant' && 
+                      rosterParticipants.includes(item.id) &&
+                      item.attributes.stats.name.toLowerCase() !== playerName.toLowerCase()
+                    )
+                  
+                  logger.mark(`[PUBG-Plugin] 找到 ${allTeammates.length} 个队友`)
+
+                  // 筛选有效的队友（有实际游戏数据的）
+                  teammates = allTeammates
+                    .filter(p => {
+                      const hasData = p.attributes.stats.timeSurvived > 0
+                      if (!hasData) {
+                        logger.mark(`[PUBG-Plugin] 队友 ${p.attributes.stats.name} 无有效数据`)
+                      }
+                      return hasData
+                    })
+                    .map(p => {
+                      const teammateData = {
+                        name: p.attributes.stats.name,
+                        kills: p.attributes.stats.kills,
+                        assists: p.attributes.stats.assists,
+                        damageDealt: Math.round(p.attributes.stats.damageDealt || 0),
+                        survival: formatDuration(p.attributes.stats.timeSurvived)
+                      }
+                      logger.mark(`[PUBG-Plugin] 队友数据: ${JSON.stringify(teammateData)}`)
+                      return teammateData
+                    })
+
+                  logger.mark(`[PUBG-Plugin] 最终有效队友数量: ${teammates.length}`)
+                } else {
+                  logger.error(`[PUBG-Plugin] 未找到玩家所在队伍`)
+                }
+              } catch (error) {
+                logger.error(`[PUBG-Plugin] 获取队友信息失败: ${error.message}`)
+                teammates = []
+              }
+            }
+
+            // 构建比赛数据
+            const matchInfo = {
+              id: matchData.data.id,
+              time: formatDate(new Date(attrs.createdAt)),
+              map: getMapName(attrs.mapName),
+              mode: getGameMode(attrs.gameMode),
+              duration: formatDuration(stats.timeSurvived),
+              totalPlayers: playerCount,
+              rank: stats.winPlace,
+              stats: {
+                kills: stats.kills,
+                assists: stats.assists,
+                damageDealt: Math.round(stats.damageDealt || 0)
+              },
+              teammates: teammates
+            }
+            logger.mark(`[PUBG-Plugin] 比赛数据: ${JSON.stringify(matchInfo)}`)
+            matchesData.push(matchInfo)
+          }
+        } catch (error) {
+          logger.error(`[PUBG-Plugin] 获取比赛详情失败: ${error.message}`)
+          matchesData.push({
+            id: matches[i].id,
+            time: '获取失败',
+            map: '未知',
+            mode: '未知',
+            duration: '未知'
+          })
+        }
       }
       
-      // 构建回复消息
-      const reply = await this.formatMatchesInfo(matchDetails, player.attributes.name, platform)
+      // 生成图片
+      const imagePath = await this.generateImage({ 
+        matches: matchesData,
+        playerName: playerName,
+        platform: platform.toUpperCase()
+      })
       
-      // 发送消息
-      await this.reply(reply)
+      // 发送图片
+      await this.sendImage(e, imagePath)
       
     } catch (error) {
       logger.error(`[PUBG-Plugin] 查询最近比赛失败: ${error.message}`)
@@ -312,68 +487,6 @@ export class PlayerApp extends plugin {
     }
     
     return true
-  }
-
-  /**
-   * 格式化比赛信息
-   * @param {Array} matches 比赛数据
-   * @param {string} playerName 玩家名称
-   * @param {string} platform 平台
-   * @returns {string} 格式化后的信息
-   */
-  async formatMatchesInfo(matches, playerName, platform) {
-    let result = `玩家 ${playerName} 的最近 ${matches.length} 场比赛:\n\n`
-    
-    for (let i = 0; i < matches.length; i++) {
-      const match = matches[i]
-      const attrs = match.data.attributes
-      const time = new Date(attrs.createdAt)
-      const formattedTime = formatDate(time)
-      
-      // 查找玩家在该比赛中的表现
-      const participant = this.findPlayerInMatch(match, playerName)
-      
-      // 计算真实玩家数量
-      const participants = match.included.filter(item => item.type === 'participant')
-      const playerCount = participants.length
-      
-      result += `=== 比赛 ${i + 1} ===\n`
-      result += `ID: ${match.data.id}\n`
-      result += `时间: ${formattedTime}\n`
-      result += `地图: ${getMapName(attrs.mapName)}\n`
-      result += `模式: ${getGameMode(attrs.gameMode)}\n`
-      
-      if (participant) {
-        const stats = participant.attributes.stats
-        result += `排名: ${stats.winPlace}/${playerCount}\n`
-        result += `击杀: ${stats.kills} | 助攻: ${stats.assists}\n`
-        result += `存活时间: ${formatDuration(stats.timeSurvived)}\n`
-      } else {
-        result += `未找到玩家数据\n`
-      }
-      
-      result += '\n'
-    }
-    
-    return result
-  }
-
-  /**
-   * 在比赛中查找特定玩家
-   * @param {object} match 比赛数据
-   * @param {string} playerName 玩家名称
-   * @returns {object|null} 玩家在比赛中的数据
-   */
-  findPlayerInMatch(match, playerName) {
-    const participants = match.included.filter(item => item.type === 'participant')
-    
-    for (const participant of participants) {
-      if (participant.attributes.stats.name === playerName) {
-        return participant
-      }
-    }
-    
-    return null
   }
 
   /**

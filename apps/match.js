@@ -1,7 +1,13 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import config from '../config/config.js'
 import { PubgApiService } from '../utils/pubg-api.js'
+import { RenderService } from '../utils/render.js'
 import { extractParameter, formatDate, formatDuration, getGameMode, getMapName } from '../utils/common.js'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
  * 比赛查询功能模块
@@ -26,6 +32,7 @@ export class MatchApp extends plugin {
     })
 
     this.apiService = new PubgApiService()
+    this.renderService = new RenderService()
     
     // 用户冷却时间映射
     this.cooldowns = new Map()
@@ -49,6 +56,60 @@ export class MatchApp extends plugin {
     // 设置新的冷却时间
     this.cooldowns.set(userId, now)
     return 0
+  }
+
+  /**
+   * 生成并保存图片
+   * @param {object} data 渲染数据
+   * @returns {string} 图片路径
+   */
+  async generateImage(data) {
+    try {
+      // 确保temp目录存在
+      const tempDir = path.join(__dirname, '../temp')
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true })
+      }
+
+      // 生成图片
+      const imageBuffer = await this.renderService.renderImage('match', data)
+      
+      // 保存图片
+      const imagePath = path.join(tempDir, `match_${Date.now()}.png`)
+      await fs.promises.writeFile(imagePath, imageBuffer)
+      
+      return imagePath
+    } catch (error) {
+      logger.error(`[PUBG-Plugin] 生成图片失败: ${error.message}`)
+      throw error
+    }
+  }
+
+  /**
+   * 发送图片消息
+   * @param {object} e 消息事件对象
+   * @param {string} imagePath 图片路径
+   */
+  async sendImage(e, imagePath) {
+    try {
+      // 使用 segment.image 方法构建图片消息
+      let msg = segment.image(imagePath)
+      
+      // 发送消息
+      await e.reply(msg)
+      
+      // 延迟删除临时文件
+      setTimeout(() => {
+        try {
+          fs.unlinkSync(imagePath)
+        } catch (error) {
+          logger.error(`[PUBG-Plugin] 删除临时图片失败: ${error.message}`)
+        }
+      }, 5000)
+    } catch (error) {
+      logger.error(`[PUBG-Plugin] 发送图片失败: ${error.message}`)
+      await e.reply(`发送图片失败: ${error.message}`)
+    }
   }
 
   /**
@@ -99,11 +160,28 @@ export class MatchApp extends plugin {
         return true
       }
       
-      // 解析比赛数据
-      const formattedMatch = await this.formatMatchDetail(matchData)
+      // 处理比赛数据
+      const processedData = this.processMatchData(matchData)
       
-      // 发送消息
-      await this.reply(formattedMatch)
+      // 准备渲染数据
+      const renderData = {
+        matches: [{
+          id: processedData.matchInfo.id,
+          time: processedData.matchInfo.time,
+          map: processedData.matchInfo.map,
+          mode: processedData.matchInfo.mode,
+          duration: processedData.matchInfo.duration,
+          totalPlayers: processedData.matchInfo.playerCount,
+          winningTeam: processedData.winningTeam,
+          killRanking: processedData.killRanking
+        }]
+      }
+      
+      // 生成图片
+      const imagePath = await this.generateImage(renderData)
+      
+      // 发送图片
+      await this.sendImage(e, imagePath)
       
     } catch (error) {
       logger.error(`[PUBG-Plugin] 查询比赛失败: ${error.message}`)
@@ -162,9 +240,7 @@ export class MatchApp extends plugin {
       
       // 获取指定数量的比赛
       const matchesToShow = matches.slice(0, count)
-      
-      // 构建回复消息
-      let reply = `最近 ${matchesToShow.length} 场比赛:\n\n`
+      const matchesData = []
       
       for (let i = 0; i < matchesToShow.length; i++) {
         const match = matchesToShow[i]
@@ -178,22 +254,45 @@ export class MatchApp extends plugin {
           const participants = matchData.included.filter(item => item.type === 'participant')
           const playerCount = participants.length
           
-          reply += `=== 比赛 ${i + 1} ===\n`
-          reply += `ID: ${match.id}\n`
-          reply += `时间: ${formatDate(new Date(attrs.createdAt))}\n`
-          reply += `地图: ${getMapName(attrs.mapName)}\n`
-          reply += `模式: ${getGameMode(attrs.gameMode)}\n`
-          reply += `玩家数: ${playerCount}\n\n`
+          // 查找玩家数据
+          const playerData = participants.find(p => 
+            p.attributes.stats.name && 
+            p.attributes.stats.name.toLowerCase() === e.sender.card.toLowerCase()
+          )
+          
+          const stats = playerData ? playerData.attributes.stats : null
+          
+          matchesData.push({
+            id: match.id,
+            time: formatDate(new Date(attrs.createdAt)),
+            map: getMapName(attrs.mapName),
+            mode: getGameMode(attrs.gameMode),
+            duration: formatDuration(attrs.duration),
+            totalPlayers: playerCount,
+            rank: stats ? stats.winPlace : null,
+            stats: stats ? {
+              kills: stats.kills,
+              assists: stats.assists
+            } : null
+          })
           
         } catch (error) {
           logger.error(`[PUBG-Plugin] 获取比赛 ${match.id} 详情失败: ${error.message}`)
-          reply += `=== 比赛 ${i + 1} ===\n`
-          reply += `ID: ${match.id}\n`
-          reply += `无法获取详细信息\n\n`
+          matchesData.push({
+            id: match.id,
+            time: '获取失败',
+            map: '未知',
+            mode: '未知',
+            duration: '未知'
+          })
         }
       }
       
-      await this.reply(reply)
+      // 生成图片
+      const imagePath = await this.generateImage({ matches: matchesData })
+      
+      // 发送图片
+      await this.sendImage(e, imagePath)
       
     } catch (error) {
       logger.error(`[PUBG-Plugin] 获取最近比赛失败: ${error.message}`)

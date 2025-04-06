@@ -148,16 +148,19 @@ export function getMapName(mapId) {
     'Desert_Main': '米拉玛',
     'DihorOtok_Main': '维寒迪',
     'Erangel_Main': '艾伦格',
-    'Baltic_Main': '帕拉莫',
+    'Baltic_Main': '艾伦格',
     'Range_Main': '训练场',
     'Savage_Main': '萨诺',
     'Summerland_Main': '凯拉丁',
     'Tiger_Main': '泰戈',
     'Chimera_Main': '海文',
     'Kiki_Main': '德卡',
-    'Neon_Main': '霓虹城'
+    'Neon_Main': '霓虹城',
+    'Tutorial_Main': '教程'
   }
-  return mapNames[mapId] || mapId
+  
+  const result = mapNames[mapId] || mapId
+  return result
 }
 
 /**
