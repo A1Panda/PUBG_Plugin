@@ -272,51 +272,29 @@ export class PubgApiService {
   }
 
   /**
-   * 获取比赛遥测数据
-   * @param {string} telemetryUrl 遥测URL
-   * @returns {Promise<Object>} 遥测数据
-   * @returns {Object[]} 返回数据结构
-   * @returns {string} data[]._T - 事件类型
-   * @returns {string} data[]._D - 事件时间
-   * @returns {Object} data[].common - 通用数据
-   * @returns {string} data[].common.mapName - 地图名称
-   * @returns {string} data[].common.gameMode - 游戏模式
-   * @returns {Object} data[].character - 角色数据
-   * @returns {string} data[].character.name - 角色名称
-   * @returns {string} data[].character.accountId - 账号ID
-   * @returns {Object} data[].item - 物品数据
-   * @returns {string} data[].item.itemId - 物品ID
-   * @returns {string} data[].item.category - 物品类别
-   * @returns {Object} data[].attack - 攻击数据
-   * @returns {string} data[].attack.attacker - 攻击者ID
-   * @returns {string} data[].attack.victim - 受害者ID
-   * @returns {string} data[].attack.damageTypeCategory - 伤害类型
-   * @returns {number} data[].attack.damage - 伤害值
+   * 获取遥测数据
+   * @param {string} assetId 遥测数据资源ID
+   * @returns {Promise<object>} 遥测数据
    */
-  async getTelemetry(telemetryUrl) {
+  async fetchTelemetry(assetId) {
     try {
-      // 构建缓存键
-      const cacheKey = `telemetry-${telemetryUrl}`
-      
-      // 检查缓存
-      const cachedData = this.cacheManager.get(cacheKey)
-      if (cachedData) {
-        return cachedData
+      // 获取遥测数据URL
+      const response = await this.fetchApi(`/assets/${assetId}`)
+      if (!response || !response.data || !response.data.attributes || !response.data.attributes.URL) {
+        throw new Error('无法获取遥测数据URL')
       }
-      
-      // 发送请求
-      const response = await fetch(telemetryUrl)
-      
-      if (!response.ok) {
-        throw new Error(`获取遥测数据失败: ${response.statusText}`)
+
+      const telemetryUrl = response.data.attributes.URL
+      logger.mark(`[PUBG-Plugin] 遥测数据URL: ${telemetryUrl}`)
+
+      // 获取遥测数据
+      const telemetryResponse = await fetch(telemetryUrl)
+      if (!telemetryResponse.ok) {
+        throw new Error(`获取遥测数据失败: ${telemetryResponse.status} ${telemetryResponse.statusText}`)
       }
-      
-      const data = await response.json()
-      
-      // 缓存数据
-      this.cacheManager.set(cacheKey, data)
-      
-      return data
+
+      const telemetryData = await telemetryResponse.json()
+      return telemetryData
     } catch (error) {
       logger.error(`[PUBG-Plugin] 获取遥测数据失败: ${error.message}`)
       throw error

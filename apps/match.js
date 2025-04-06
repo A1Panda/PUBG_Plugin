@@ -21,7 +21,7 @@ export class MatchApp extends plugin {
       priority: 5000,
       rule: [
         {
-          reg: `^${config.cmdPrefix}比赛.*$`,
+          reg: `^${config.cmdPrefix}查询比赛.*$`,
           fnc: 'matchInfo'
         },
         {
@@ -126,10 +126,10 @@ export class MatchApp extends plugin {
 
     // 获取比赛ID参数
     const content = e.msg.trim()
-    const matchId = extractParameter(content, `${config.cmdPrefix}比赛`)
+    const matchId = extractParameter(content, `${config.cmdPrefix}查询比赛`)
     
     if (!matchId) {
-      await this.reply(`请输入正确的格式：${config.cmdPrefix}比赛 <比赛ID>`)
+      await this.reply(`请输入正确的格式：${config.cmdPrefix}查询比赛 <比赛ID>`)
       return true
     }
     

@@ -391,13 +391,9 @@ export class PlayerApp extends plugin {
                 )
 
                 if (roster) {
-                  logger.mark(`[PUBG-Plugin] 找到玩家所在队伍`)
                   const playerTeamId = roster.attributes.stats.teamId
-                  logger.mark(`[PUBG-Plugin] 玩家队伍ID: ${playerTeamId}`)
-
                   // 从 roster 中获取所有队友
                   const rosterParticipants = roster.relationships.participants.data.map(p => p.id)
-                  logger.mark(`[PUBG-Plugin] 队伍成员ID: ${JSON.stringify(rosterParticipants)}`)
 
                   // 获取所有队友的详细信息
                   const allTeammates = matchData.included
@@ -407,14 +403,12 @@ export class PlayerApp extends plugin {
                       item.attributes.stats.name.toLowerCase() !== playerName.toLowerCase()
                     )
                   
-                  logger.mark(`[PUBG-Plugin] 找到 ${allTeammates.length} 个队友`)
 
                   // 筛选有效的队友（有实际游戏数据的）
                   teammates = allTeammates
                     .filter(p => {
                       const hasData = p.attributes.stats.timeSurvived > 0
                       if (!hasData) {
-                        logger.mark(`[PUBG-Plugin] 队友 ${p.attributes.stats.name} 无有效数据`)
                       }
                       return hasData
                     })
@@ -438,11 +432,9 @@ export class PlayerApp extends plugin {
                           swim: Math.round(p.attributes.stats.swimDistance || 0)
                         }
                       }
-                      logger.mark(`[PUBG-Plugin] 队友数据: ${JSON.stringify(teammateData)}`)
                       return teammateData
                     })
 
-                  logger.mark(`[PUBG-Plugin] 最终有效队友数量: ${teammates.length}`)
                 } else {
                   logger.error(`[PUBG-Plugin] 未找到玩家所在队伍`)
                 }
@@ -481,7 +473,6 @@ export class PlayerApp extends plugin {
               },
               teammates: teammates
             }
-            logger.mark(`[PUBG-Plugin] 比赛数据: ${JSON.stringify(matchInfo)}`)
             matchesData.push(matchInfo)
           }
         } catch (error) {
