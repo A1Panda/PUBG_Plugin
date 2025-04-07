@@ -72,6 +72,8 @@ export class RenderService {
     const page = await browser.newPage()
 
     try {
+      console.log(`[PUBG-Plugin] 开始生成${templateName}图片...`)
+
       // 设置视口大小
       await page.setViewport({
         width: options.width || 800,
@@ -81,11 +83,19 @@ export class RenderService {
 
       // 加载HTML内容
       await page.setContent(html, {
-        waitUntil: 'networkidle0'
+        waitUntil: ['networkidle0', 'domcontentloaded']
       })
 
       // 等待内容渲染完成
-      await page.waitForSelector('.container')
+      try {
+        await page.waitForSelector('.container', { timeout: 5000 })
+      } catch (error) {
+        console.error(`[PUBG-Plugin] 等待选择器超时: ${error.message}`)
+        throw new Error('页面渲染超时，请检查HTML模板')
+      }
+
+      // 等待一小段时间确保渲染完成
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       // 获取内容实际高度
       const bodyHandle = await page.$('body')
@@ -102,10 +112,16 @@ export class RenderService {
       // 生成图片
       const imageBuffer = await page.screenshot({
         type: 'png',
-        fullPage: true
+        fullPage: true,
+        omitBackground: true // 使用透明背景
       })
 
+      console.log(`[PUBG-Plugin] ${templateName}图片生成成功`)
       return imageBuffer
+
+    } catch (error) {
+      console.error(`[PUBG-Plugin] 生成图片失败: ${error.message}`)
+      throw error
     } finally {
       await page.close()
     }

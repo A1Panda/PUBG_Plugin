@@ -34,36 +34,39 @@ export class ImageGenerator {
    */
   async getFormattedStats(playerData, seasonData, platform) {
     try {
-      // 旧版备用文本生成方法
+      // 生成文本格式的战绩数据
       const textStats = await this.statsGenerator.generatePlayerStats(playerData, seasonData, platform)
       
       // 提取玩家数据，用于图片生成
       const playerName = playerData.attributes.name
       const stats = seasonData.data.attributes.gameModeStats
       
-      // 生成图片并返回路径
-      const imgPath = await this.statsGenerator.generateStatsImage(playerName, stats, platform)
-      
-      // 如果图片生成失败，返回文本
-      if (!imgPath) {
-        logger.warn('[PUBG-Plugin] 图片生成失败，返回文本格式')
+      try {
+        // 生成图片并返回路径
+        const imgPath = await this.statsGenerator.generateStatsImage(playerName, stats, platform)
+        
+        if (!imgPath) {
+          console.warn('[PUBG-Plugin] 图片生成失败，返回文本格式')
+          return textStats
+        }
+        
+        // 设置延迟删除
+        setTimeout(async () => {
+          try {
+            await fs.promises.unlink(imgPath)
+            console.log(`[PUBG-Plugin] 已清理临时图片: ${path.basename(imgPath)}`)
+          } catch (error) {
+            console.error(`[PUBG-Plugin] 清理临时图片失败: ${error.message}`)
+          }
+        }, 1000) // 1秒后删除，确保图片已经发送
+        
+        return imgPath
+      } catch (error) {
+        console.error(`[PUBG-Plugin] 图片生成失败: ${error.message}`)
         return textStats
       }
-      
-      // 设置延迟删除
-      setTimeout(async () => {
-        try {
-          await fs.promises.unlink(imgPath)
-          logger.info(`[PUBG-Plugin] 已清理临时图片: ${path.basename(imgPath)}`)
-        } catch (error) {
-          logger.error(`[PUBG-Plugin] 清理临时图片失败: ${error.message}`)
-        }
-      }, 1000) // 1秒后删除，确保图片已经发送
-      
-      // 返回图片路径
-      return imgPath
     } catch (error) {
-      logger.error(`[PUBG-Plugin] 获取战绩数据失败: ${error.message}`)
+      console.error(`[PUBG-Plugin] 获取战绩数据失败: ${error.message}`)
       throw error
     }
   }
