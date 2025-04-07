@@ -13,7 +13,7 @@
             color: #E0E0E0;
         }
         .container {
-            width: 700px;
+            width: 800px;
             padding: 25px;
             box-sizing: border-box;
         }
@@ -162,27 +162,27 @@
             <div class="overview">
                 <div class="stat-item">
                     <div class="stat-label">总场次</div>
-                    <div class="stat-value">{{totalMatches}}</div>
+                    <div class="stat-value">{{overview.totalMatches}}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">总胜场</div>
-                    <div class="stat-value">{{totalWins}}</div>
+                    <div class="stat-value">{{overview.totalWins}}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">胜率</div>
-                    <div class="stat-value winrate-highlight">{{winRate}}%</div>
+                    <div class="stat-value winrate-highlight">{{overview.winRate}}%</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">总击杀</div>
-                    <div class="stat-value">{{totalKills}}</div>
+                    <div class="stat-value">{{overview.totalKills}}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">K/D比率</div>
-                    <div class="stat-value kd-highlight">{{totalKD}}</div>
+                    <div class="stat-value kd-highlight">{{overview.totalKD}}</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">场均击杀</div>
-                    <div class="stat-value highlight">{{avgKills}}</div>
+                    <div class="stat-value highlight">{{overview.avgKills}}</div>
                 </div>
             </div>
         </div>
@@ -195,27 +195,27 @@
                     <div class="mode-stats">
                         <div class="mode-stat">
                             <div class="mode-stat-label">场次</div>
-                            <div class="mode-stat-value">{{soloMatches}}</div>
+                            <div class="mode-stat-value">{{solo.matches}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">胜场</div>
-                            <div class="mode-stat-value">{{soloWins}}</div>
+                            <div class="mode-stat-value">{{solo.wins}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">胜率</div>
-                            <div class="mode-stat-value winrate-highlight">{{soloWinRate}}%</div>
-                        </div>
-                        <div class="mode-stat">
-                            <div class="mode-stat-label">K/D</div>
-                            <div class="mode-stat-value kd-highlight">{{soloKD}}</div>
+                            <div class="mode-stat-value winrate-highlight">{{solo.winRate}}%</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">击杀</div>
-                            <div class="mode-stat-value">{{soloKills}}</div>
+                            <div class="mode-stat-value">{{solo.kills}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">助攻</div>
-                            <div class="mode-stat-value">{{soloAssists}}</div>
+                            <div class="mode-stat-value">{{solo.assists}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">K/D</div>
+                            <div class="mode-stat-value kd-highlight">{{solo.kd}}</div>
                         </div>
                     </div>
                 </div>
@@ -225,27 +225,27 @@
                     <div class="mode-stats">
                         <div class="mode-stat">
                             <div class="mode-stat-label">场次</div>
-                            <div class="mode-stat-value">{{duoMatches}}</div>
+                            <div class="mode-stat-value">{{duo.matches}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">胜场</div>
-                            <div class="mode-stat-value">{{duoWins}}</div>
+                            <div class="mode-stat-value">{{duo.wins}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">胜率</div>
-                            <div class="mode-stat-value winrate-highlight">{{duoWinRate}}%</div>
-                        </div>
-                        <div class="mode-stat">
-                            <div class="mode-stat-label">K/D</div>
-                            <div class="mode-stat-value kd-highlight">{{duoKD}}</div>
+                            <div class="mode-stat-value winrate-highlight">{{duo.winRate}}%</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">击杀</div>
-                            <div class="mode-stat-value">{{duoKills}}</div>
+                            <div class="mode-stat-value">{{duo.kills}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">助攻</div>
-                            <div class="mode-stat-value">{{duoAssists}}</div>
+                            <div class="mode-stat-value">{{duo.assists}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">K/D</div>
+                            <div class="mode-stat-value kd-highlight">{{duo.kd}}</div>
                         </div>
                     </div>
                 </div>
@@ -255,27 +255,27 @@
                     <div class="mode-stats">
                         <div class="mode-stat">
                             <div class="mode-stat-label">场次</div>
-                            <div class="mode-stat-value">{{squadMatches}}</div>
+                            <div class="mode-stat-value">{{squad.matches}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">胜场</div>
-                            <div class="mode-stat-value">{{squadWins}}</div>
+                            <div class="mode-stat-value">{{squad.wins}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">胜率</div>
-                            <div class="mode-stat-value winrate-highlight">{{squadWinRate}}%</div>
-                        </div>
-                        <div class="mode-stat">
-                            <div class="mode-stat-label">K/D</div>
-                            <div class="mode-stat-value kd-highlight">{{squadKD}}</div>
+                            <div class="mode-stat-value winrate-highlight">{{squad.winRate}}%</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">击杀</div>
-                            <div class="mode-stat-value">{{squadKills}}</div>
+                            <div class="mode-stat-value">{{squad.kills}}</div>
                         </div>
                         <div class="mode-stat">
                             <div class="mode-stat-label">助攻</div>
-                            <div class="mode-stat-value">{{squadAssists}}</div>
+                            <div class="mode-stat-value">{{squad.assists}}</div>
+                        </div>
+                        <div class="mode-stat">
+                            <div class="mode-stat-label">K/D</div>
+                            <div class="mode-stat-value kd-highlight">{{squad.kd}}</div>
                         </div>
                     </div>
                 </div>

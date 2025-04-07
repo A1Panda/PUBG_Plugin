@@ -133,16 +133,10 @@ export class StatsGenerator extends BaseGenerator {
    */
   async generateStatsImage(playerName, stats, platform) {
     try {
-      logger.info('[PUBG-Plugin] 开始生成战绩统计图片')
-      
-      // 确保stats对象存在
       if (!stats) {
-        logger.error('[PUBG-Plugin] 无效的战绩数据')
+        console.error('[PUBG-Plugin] 无效的战绩数据')
         return null
       }
-      
-      // 检查是否能读取stats中的数据
-      logger.debug(`[PUBG-Plugin] 战绩数据结构: ${JSON.stringify(Object.keys(stats))}`)
       
       // 计算数据 - 单人数据
       const soloStats = stats.solo || {}
@@ -181,70 +175,123 @@ export class StatsGenerator extends BaseGenerator {
       const winRate = totalMatches > 0 ? (totalWins / totalMatches * 100).toFixed(2) : '0.00'
       const totalDeaths = totalMatches - totalWins
       const totalKD = totalDeaths > 0 ? (totalKills / totalDeaths).toFixed(2) : totalKills > 0 ? totalKills.toFixed(2) : '0.00'
-      
-      // 计算场均击杀
       const avgKills = totalMatches > 0 ? (totalKills / totalMatches).toFixed(2) : '0.00'
       
       // 读取HTML模板
-      try {
-        logger.debug('[PUBG-Plugin] 开始读取战绩模板')
-        const template = await this.readTemplate('stats-template.html')
-        logger.debug(`[PUBG-Plugin] 成功读取战绩模板，长度: ${template.length}字节`)
-        
-        // 编译模板
-        const compiledTemplate = Handlebars.compile(template)
-        
-        // 准备模板数据
-        const templateData = {
-          playerName: playerName || '未知玩家',
-          platform: (platform || 'unknown').toUpperCase(),
+      const template = await this.readTemplate('stats-template.html')
+      const compiledTemplate = Handlebars.compile(template)
+      
+      // 准备模板数据
+      const templateData = {
+        playerName: playerName || '未知玩家',
+        platform: (platform || 'unknown').toUpperCase(),
+        updateTime: new Date().toLocaleString(),
+        overview: {
           totalMatches,
           totalWins,
           totalKills,
           winRate,
           totalKD,
-          avgKills,
-          soloMatches,
-          soloWins,
-          soloWinRate,
-          soloKills,
-          soloAssists,
-          soloKD,
-          duoMatches,
-          duoWins,
-          duoWinRate,
-          duoKills,
-          duoAssists,
-          duoKD,
-          squadMatches,
-          squadWins,
-          squadWinRate,
-          squadKills,
-          squadAssists,
-          squadKD,
-          updateTime: new Date().toLocaleString()
+          avgKills
+        },
+        solo: {
+          matches: soloMatches,
+          wins: soloWins,
+          kills: soloKills,
+          assists: soloAssists,
+          kd: soloKD,
+          winRate: soloWinRate
+        },
+        duo: {
+          matches: duoMatches,
+          wins: duoWins,
+          kills: duoKills,
+          assists: duoAssists,
+          kd: duoKD,
+          winRate: duoWinRate
+        },
+        squad: {
+          matches: squadMatches,
+          wins: squadWins,
+          kills: squadKills,
+          assists: squadAssists,
+          kd: squadKD,
+          winRate: squadWinRate
         }
-        
-        // 将数据写入日志以便调试
-        logger.debug(`[PUBG-Plugin] 战绩统计模板数据: ${JSON.stringify(templateData)}`)
-        
-        // 生成HTML
-        const html = compiledTemplate(templateData)
-        
-        // 使用基类的方法生成图片
-        return await this.generateImage(html, {
-          width: 700,
-          height: 800,
-          deviceScaleFactor: 1.5,
-          fileName: `pubg_stats_${Date.now()}.png`
-        })
-      } catch (error) {
-        logger.error(`[PUBG-Plugin] 读取或编译模板失败: ${error.message}`)
-        return null
       }
+      
+      // 渲染HTML
+      const html = compiledTemplate(templateData)
+      
+      // 生成临时HTML文件
+      const tempHtmlPath = path.join(this.tempDir, `temp_${Date.now()}.html`)
+      await fs.promises.writeFile(tempHtmlPath, html)
+      
+      // 启动Puppeteer
+      const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      })
+      
+      try {
+        const page = await browser.newPage()
+        
+        // 设置视口大小
+        await page.setViewport({
+          width: 600,
+          height: 600,
+          deviceScaleFactor: 2
+        })
+        
+        // 加载HTML文件
+        const fileUrl = `file://${tempHtmlPath}`
+        await page.goto(fileUrl, {
+          waitUntil: ['networkidle0', 'domcontentloaded']
+        })
+        
+        // 等待内容渲染完成
+        await page.waitForSelector('.container', { timeout: 5000 })
+        
+        // 等待一小段时间确保渲染完成
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 获取内容实际高度
+        const bodyHandle = await page.$('body')
+        const { height } = await bodyHandle.boundingBox()
+        await bodyHandle.dispose()
+        
+        // 调整视口高度
+        await page.setViewport({
+          width: 600,
+          height: Math.ceil(height),
+          deviceScaleFactor: 2
+        })
+        
+        // 生成图片
+        const tempImagePath = path.join(this.tempDir, `stats_${Date.now()}.png`)
+        await page.screenshot({
+          path: tempImagePath,
+          type: 'png',
+          fullPage: true,
+          omitBackground: true
+        })
+        
+        return tempImagePath
+        
+      } finally {
+        await browser.close()
+        
+        // 清理临时HTML文件
+        try {
+          await fs.promises.unlink(tempHtmlPath)
+        } catch (error) {
+          console.error(`[PUBG-Plugin] 清理临时HTML文件失败: ${error.message}`)
+        }
+      }
+      
     } catch (error) {
-      logger.error(`[PUBG-Plugin] 生成战绩图片失败: ${error.message}`)
-      return null
+      console.error(`[PUBG-Plugin] 生成战绩图片失败: ${error.message}`)
+      throw error
     }
   }
 } 
