@@ -259,116 +259,240 @@ export class MatchDetailsApp extends plugin {
     
     // 定义武器名称映射
     const weaponNameMap = {
-      'M416': 'M416',
-      'HK416': 'M416',
-      'AKM': 'AKM',
-      'SCAR-L': 'SCAR-L',
-      'Kar98k': 'Kar98k',
-      'M24': 'M24',
-      'AWM': 'AWM',
-      'Mini14': 'Mini14',
-      'SKS': 'SKS',
-      'VSS': 'VSS',
-      'DP28': 'DP28',
-      'UMP': 'UMP45',
-      'Vector': 'Vector',
-      'UZI': 'UZI',
-      'S12K': 'S12K',
-      'S686': 'S686',
-      'S1897': 'S1897',
-      'Crossbow': '弩',
-      'Pan': '平底锅',
-      'Vehicle': '载具',
-      'Grenade': '手雷',
-      'Molotov': '燃烧瓶',
-      'Punch': '拳头'
+      'WeapAK47_C': 'AK47',
+      'WeapAKM_C': 'AKM',
+      'WeapAUG_C': 'AUG',
+      'WeapAWM_C': 'AWM',
+      'WeapBerreta686_C': 'S686',
+      'WeapBerylM762_C': 'Beryl',
+      'WeapBizonPP19_C': 'Bizon',
+      'WeapCrossbow_1_C': '弩',
+      'WeapDP28_C': 'DP28',
+      'WeapFNFal_C': 'SLR',
+      'WeapG36C_C': 'G36C',
+      'WeapGroza_C': 'Groza',
+      'WeapHK416_C': 'M416',
+      'WeapKar98k_C': 'Kar98k',
+      'WeapM16A4_C': 'M16A4',
+      'WeapM24_C': 'M24',
+      'WeapM249_C': 'M249',
+      'WeapM9_C': 'P92',
+      'WeapMini14_C': 'Mini14',
+      'WeapMk14_C': 'MK14',
+      'WeapMk47Mutant_C': 'Mutant',
+      'WeapNagantM1895_C': 'R1895',
+      'WeapPan_C': '平底锅',
+      'WeapQBU88_C': 'QBU',
+      'WeapQBZ95_C': 'QBZ',
+      'WeapRhino_C': 'R45',
+      'WeapSCAR-L_C': 'SCAR-L',
+      'WeapSKS_C': 'SKS',
+      'WeapSaiga12_C': 'S12K',
+      'WeapThompson_C': 'Tommy Gun',
+      'WeapUMP_C': 'UMP45',
+      'WeapUZI_C': 'UZI',
+      'WeapVSS_C': 'VSS',
+      'WeapVector_C': 'Vector',
+      'WeapWin94_C': 'Win94',
+      'WeapWinchester_C': 'S1897',
+      'WeapM1911_C': 'P1911',
+      'WeapMk12_C': 'Mk12',
+      'WeapMosin_C': 'Mosin',
+      'WeapP18C_C': 'P18C',
+      'WeapP92_C': 'P92',
+      'WeapP9_C': 'P9',
+      'WeapR45_C': 'R45',
+      'WeapS1897_C': 'S1897',
+      'WeapS12K_C': 'S12K',
+      'WeapS686_C': 'S686',
+      'WeapSawnOff_C': 'Sawed-Off',
+      'WeapSkorpion_C': 'Skorpion',
+      'WeapUMP9_C': 'UMP9',
+      'WeapVz61_C': 'Vz61'
+    }
+    
+    // 定义武器类型映射
+    const weaponTypeMap = {
+      'WeapName_': '',
+      '_C': '',
+      'BP_': '',
+      'Weapon_': '',
+      'Weap': ''
     }
     
     if (telemetry) {
       telemetry.forEach(event => {
-        // 处理击杀事件
-        if (event._T === 'LogPlayerKill' && 
-            event.killer && 
-            event.killer.name && 
-            event.killer.name.toLowerCase() === this.playerName.toLowerCase()) {
-          
-          // 获取武器名称
-          let weaponName = event.damageCauserName || 'Unknown'
-          
-          // 处理武器名称
-          weaponName = weaponName
-            .replace('WeapName_', '')
-            .replace('_C', '')
-            .replace(/^BP_/, '')
-            .replace(/^Weapon_/, '')
-          
-          // 使用武器名称映射
-          if (weaponNameMap[weaponName]) {
-            weaponName = weaponNameMap[weaponName]
-          }
-          
-          // 初始化武器统计
-          if (!result.weaponStats[weaponName]) {
-            result.weaponStats[weaponName] = {
-              kills: 0,
-              headshots: 0,
-              damage: 0
+        try {
+          // 处理击杀事件
+          if (event._T === 'LogPlayerKill' || 
+              event._T === 'LogPlayerKillV2' || 
+              event._T === 'LogPlayerKillV3') {
+            
+            if (event.killer && 
+                event.killer.name && 
+                event.killer.name.toLowerCase() === this.playerName.toLowerCase()) {
+              
+              // 获取武器名称
+              let weaponName = event.killerDamageInfo?.damageCauserName || event.damageCauserName
+              
+              // 处理特殊情况
+              if (!weaponName) {
+                weaponName = '未知'
+              } else if (weaponName.includes('Vehicle')) {
+                weaponName = '载具'
+              } else if (weaponName.includes('Grenade')) {
+                weaponName = '手雷'
+              } else if (weaponName.includes('Molotov')) {
+                weaponName = '燃烧瓶'
+              } else if (weaponName.includes('Punch')) {
+                weaponName = '拳头'
+              } else {
+                // 使用武器名称映射
+                weaponName = weaponNameMap[weaponName]
+                
+                // 如果没有找到映射，尝试清理武器名称
+                if (!weaponName) {
+                  let cleanedName = weaponName
+                  for (const [prefix, replacement] of Object.entries(weaponTypeMap)) {
+                    if (cleanedName && typeof cleanedName === 'string') {
+                      cleanedName = cleanedName.replace(prefix, replacement)
+                    }
+                  }
+                  weaponName = cleanedName || '未知'
+                }
+              }
+              
+              // 初始化武器统计
+              if (!result.weaponStats[weaponName]) {
+                result.weaponStats[weaponName] = {
+                  kills: 0,
+                  headshots: 0,
+                  damage: 0
+                }
+              }
+              
+              // 更新击杀统计
+              result.weaponStats[weaponName].kills++
+              
+              // 检查是否爆头
+              if (event.killerDamageInfo?.damageReason && 
+                  event.killerDamageInfo.damageReason.toLowerCase() === 'headshot') {
+                result.weaponStats[weaponName].headshots++
+              }
+              
+              // 处理连杀
+              const currentTime = new Date(event._D).getTime()
+              if (lastKillTime > 0 && currentTime - lastKillTime <= 10000) {
+                currentStreak++
+              } else {
+                if (currentStreak > 1) {
+                  result.killStreaks.push(currentStreak)
+                }
+                currentStreak = 1
+              }
+              lastKillTime = currentTime
             }
           }
           
-          // 更新击杀统计
-          result.weaponStats[weaponName].kills++
-          
-          // 检查是否爆头
-          if (event.damageReason === 'HeadShot') {
-            result.weaponStats[weaponName].headshots++
-          }
-          
-          // 处理连杀
-          const currentTime = new Date(event._D).getTime()
-          if (lastKillTime > 0 && currentTime - lastKillTime <= 10000) { // 10秒内的连杀
-            currentStreak++
-          } else {
-            if (currentStreak > 1) { // 只记录2连杀及以上
-              result.killStreaks.push(currentStreak)
-            }
-            currentStreak = 1
-          }
-          lastKillTime = currentTime
-        }
-        
-        // 处理伤害事件
-        else if (event._T === 'LogPlayerTakeDamage' &&
-                event.attacker &&
+          // 处理伤害事件
+          else if (event._T === 'LogPlayerTakeDamage') {
+            // 处理玩家造成的伤害
+            if (event.attacker &&
                 event.attacker.name &&
-                event.attacker.name.toLowerCase() === this.playerName.toLowerCase()) {
-          
-          // 获取武器名称
-          let weaponName = event.damageCauserName || 'Unknown'
-          
-          // 处理武器名称
-          weaponName = weaponName
-            .replace('WeapName_', '')
-            .replace('_C', '')
-            .replace(/^BP_/, '')
-            .replace(/^Weapon_/, '')
-          
-          // 使用武器名称映射
-          if (weaponNameMap[weaponName]) {
-            weaponName = weaponNameMap[weaponName]
-          }
-          
-          // 初始化武器统计
-          if (!result.weaponStats[weaponName]) {
-            result.weaponStats[weaponName] = {
-              kills: 0,
-              headshots: 0,
-              damage: 0
+                event.attacker.name.toLowerCase() === this.playerName.toLowerCase() &&
+                event.victim &&
+                event.victim.name.toLowerCase() !== this.playerName.toLowerCase()) {
+              
+              // 获取武器名称
+              let weaponName = event.damageCauserName
+              
+              // 处理特殊情况
+              if (!weaponName) {
+                weaponName = '未知'
+              } else if (weaponName.includes('Vehicle')) {
+                weaponName = '载具'
+              } else if (weaponName.includes('Grenade')) {
+                weaponName = '手雷'
+              } else if (weaponName.includes('Molotov')) {
+                weaponName = '燃烧瓶'
+              } else if (weaponName.includes('Punch')) {
+                weaponName = '拳头'
+              } else {
+                // 使用武器名称映射
+                weaponName = weaponNameMap[weaponName]
+                
+                // 如果没有找到映射，尝试清理武器名称
+                if (!weaponName) {
+                  let cleanedName = weaponName
+                  for (const [prefix, replacement] of Object.entries(weaponTypeMap)) {
+                    if (cleanedName && typeof cleanedName === 'string') {
+                      cleanedName = cleanedName.replace(prefix, replacement)
+                    }
+                  }
+                  weaponName = cleanedName || '未知'
+                }
+              }
+              
+              // 初始化武器统计
+              if (!result.weaponStats[weaponName]) {
+                result.weaponStats[weaponName] = {
+                  kills: 0,
+                  headshots: 0,
+                  damage: 0
+                }
+              }
+              
+              // 更新伤害统计
+              const damageAmount = parseFloat(event.damage) || 0
+              if (damageAmount > 0) {
+                result.weaponStats[weaponName].damage += damageAmount
+              }
+            }
+            
+            // 处理玩家受到的伤害
+            else if (event.victim &&
+                     event.victim.name &&
+                     event.victim.name.toLowerCase() === this.playerName.toLowerCase()) {
+              
+              // 获取武器名称
+              let weaponName = event.damageCauserName
+              
+              // 处理特殊情况
+              if (!weaponName) {
+                weaponName = '未知'
+              } else if (weaponName.includes('Vehicle')) {
+                weaponName = '载具'
+              } else if (weaponName.includes('Grenade')) {
+                weaponName = '手雷'
+              } else if (weaponName.includes('Molotov')) {
+                weaponName = '燃烧瓶'
+              } else if (weaponName.includes('Punch')) {
+                weaponName = '拳头'
+              } else {
+                // 使用武器名称映射
+                weaponName = weaponNameMap[weaponName]
+                
+                // 如果没有找到映射，尝试清理武器名称
+                if (!weaponName) {
+                  let cleanedName = weaponName
+                  for (const [prefix, replacement] of Object.entries(weaponTypeMap)) {
+                    if (cleanedName && typeof cleanedName === 'string') {
+                      cleanedName = cleanedName.replace(prefix, replacement)
+                    }
+                  }
+                  weaponName = cleanedName || '未知'
+                }
+              }
+              
+              // 更新承受伤害统计
+              const damageAmount = parseFloat(event.damage) || 0
+              if (damageAmount > 0) {
+                result.damageTaken += damageAmount
+              }
             }
           }
-          
-          // 更新伤害统计
-          result.weaponStats[weaponName].damage += event.damage || 0
+        } catch (error) {
+          console.error(`处理遥测事件时出错: ${error.message}`, event)
         }
       })
     }
